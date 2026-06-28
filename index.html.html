@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kerala PSC Rotation Calculator</title>
+    <style>
+        :root {
+            --bg-color: #f9fafb;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --border-color: #d1d5db;
+            --primary: #000000;
+            --primary-hover: #374151;
+            --result-bg: #dbeafe;
+            --result-text: #1e40af;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.5;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+
+        p.subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary);
+        }
+
+        button {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: var(--primary);
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 1rem;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        #result-container {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background-color: var(--result-bg);
+            color: var(--result-text);
+            border-radius: 6px;
+            text-align: center;
+            display: none;
+        }
+
+        .vacancy-count {
+            font-size: 2rem;
+            font-weight: 800;
+            display: block;
+            margin: 0.5rem 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>PSC Roster Calculator</h1>
+    <p class="subtitle">Estimate vacancies needed for your turn</p>
+
+    <div class="form-group">
+        <label for="currentPointer">Current Roster Position (1-100)</label>
+        <input type="number" id="currentPointer" min="1" max="100" placeholder="e.g., 42" required>
+    </div>
+
+    <div class="form-group">
+        <label for="category">Your Category</label>
+        <select id="category">
+            <option value="OC">Open Competition (OC)</option>
+            <option value="EBT">Ezhava/Thiyya/Billava (E/B/T)</option>
+            <option value="SC">Scheduled Caste (SC)</option>
+            <option value="ST">Scheduled Tribe (ST)</option>
+            <option value="M">Muslim (M)</option>
+            <option value="LCAI">Latin Catholic/Anglo Indian (LC/AI)</option>
+            <option value="OBC">Other Backward Classes (OBC)</option>
+            <option value="V">Viswakarma (V)</option>
+            <option value="EWS">Economically Weaker Section (EWS)</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="rank">Your Rank in Selected Category</label>
+        <input type="number" id="rank" min="1" placeholder="e.g., 5" required>
+    </div>
+
+    <button onclick="calculateVacancies()">Calculate Vacancies Needed</button>
+
+    <div id="result-container">
+        <span>Estimated vacancies required:</span>
+        <span class="vacancy-count" id="vacancyOutput">0</span>
+        <span style="font-size: 0.875rem; opacity: 0.8;">*Assuming no NJD or merit bumping variables</span>
+    </div>
+</div>
+
+<script>
+    // 100-Point Kerala PSC General Roster (Simplified Approximation for V1)
+    // Odd slots are generally OC. EWS occupies 9, 19, 29, etc.
+    const ROSTER_CHART = [
+        "OC", "EBT", "OC", "SC", "OC", "M", "OC", "LCAI", "EWS", "OBC",       // 1-10
+        "OC", "SC", "OC", "EBT", "OC", "M", "OC", "EBT", "EWS", "V",          // 11-20
+        "OC", "LCAI", "OC", "SC", "OC", "M", "OC", "EBT", "EWS", "M",         // 21-30
+        "OC", "SC", "OC", "EBT", "OC", "M", "OC", "SIUC", "EWS", "OBC",       // 31-40
+        "OC", "EBT", "OC", "ST", "OC", "M", "OC", "OX", "EWS", "D",           // 41-50
+        "OC", "SC", "OC", "EBT", "OC", "M", "OC", "EBT", "EWS", "HN",         // 51-60
+        "OC", "EBT", "OC", "SC", "OC", "M", "OC", "LCAI", "EWS", "V",         // 61-70
+        "OC", "SC", "OC", "EBT", "OC", "M", "OC", "EBT", "EWS", "M",          // 71-80
+        "OC", "EBT", "OC", "SC", "OC", "M", "OC", "EBT", "EWS", "OBC",        // 81-90
+        "OC", "ST", "OC", "LCAI", "OC", "M", "OC", "EBT", "EWS", "V"          // 91-100
+    ];
+
+    function calculateVacancies() {
+        const pointerInput = document.getElementById('currentPointer').value;
+        const targetCategory = document.getElementById('category').value;
+        const rankInput = document.getElementById('rank').value;
+        const resultContainer = document.getElementById('result-container');
+        const vacancyOutput = document.getElementById('vacancyOutput');
+
+        if (!pointerInput || !rankInput) {
+            alert("Please fill in all fields.");
+            return;
+        }
+
+        let currentPointer = parseInt(pointerInput) - 1; // Convert 1-100 to 0-99 index
+        let targetRank = parseInt(rankInput);
+        
+        let vacanciesNeeded = 0;
+        let categorySlotsFound = 0;
+
+        // Failsafe limit to prevent infinite loops if category doesn't exist in roster
+        let maxIterations = 10000; 
+
+        while (categorySlotsFound < targetRank && maxIterations > 0) {
+            vacanciesNeeded++;
+            
+            // Check if the current slot belongs to the requested category
+            if (ROSTER_CHART[currentPointer] === targetCategory) {
+                categorySlotsFound++;
+            }
+
+            // Move to the next slot, loop back to 0 if we hit 100
+            currentPointer = (currentPointer + 1) % 100;
+            maxIterations--;
+        }
+
+        if (maxIterations === 0) {
+            alert("Error: Invalid calculation or category not found in roster.");
+            return;
+        }
+
+        // Display results
+        vacancyOutput.innerText = vacanciesNeeded;
+        resultContainer.style.display = 'block';
+    }
+</script>
+
+</body>
+</html>
