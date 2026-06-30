@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kerala PSC Vacancy Calculator</title>
+<style>
+  :root{
+    --bg:#0f1220; --panel:#171b2e; --panel2:#1f2540; --ink:#e8ebf7; --muted:#9aa2c0;
+    --line:#2a3152; --accent:#5b8cff; --accent2:#37d6a7; --warn:#ffb454; --bad:#ff6b6b;
+    --good:#37d6a7; --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:linear-gradient(180deg,#0c0f1c,#0f1220 240px);
+    color:var(--ink); font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    padding:16px; max-width:920px; margin:0 auto;
+  }
+  h1{font-size:22px;margin:4px 0 2px}
+  h2{font-size:16px;margin:0 0 10px;color:var(--accent2);letter-spacing:.3px}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 16px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px;margin:0 0 16px;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+  .step{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.5px;
+    color:#0c0f1c;background:var(--accent);border-radius:999px;padding:2px 9px;margin-right:8px}
+  label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px;font-weight:600}
+  input,select,textarea,button{font:inherit;color:var(--ink)}
+  input,select,textarea{background:var(--panel2);border:1px solid var(--line);
+    border-radius:10px;padding:9px 10px;width:100%}
+  textarea{min-height:130px;resize:vertical;font-family:ui-monospace,Consolas,monospace;font-size:12px}
+  button{cursor:pointer;border:1px solid var(--line);background:var(--panel2);border-radius:10px;
+    padding:10px 14px;font-weight:600;transition:.15s}
+  button:hover{border-color:var(--accent)}
+  button.primary{background:linear-gradient(180deg,#5b8cff,#3f6fe0);border-color:#3f6fe0;color:#fff}
+  button.primary:hover{filter:brightness(1.07)}
+  button.ghost{background:transparent}
+  .row{display:flex;gap:12px;flex-wrap:wrap}
+  .row>div{flex:1;min-width:140px}
+  .tabs{display:flex;gap:8px;margin-bottom:12px}
+  .tabs button{flex:1}
+  .tabs button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .hidden{display:none!important}
+  .muted{color:var(--muted)}
+  .meta{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--muted);margin-top:8px}
+  .meta b{color:var(--ink);font-weight:600}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:5px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+  th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px;position:sticky;top:0;background:var(--panel)}
+  td input,td select{padding:5px 6px;border-radius:7px}
+  /* remove number-input spin buttons (they clipped 3-digit ranks like 100 -> "10") */
+  input[type=number]{-moz-appearance:textfield;appearance:textfield}
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+  td .rk{text-align:center;width:48px;min-width:48px}  /* fixed width fits up to 4-digit ranks */
+  .tbl-wrap{max-height:340px;overflow:auto;border:1px solid var(--line);border-radius:10px}
+  .flag{font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;white-space:nowrap}
+  .flag.ok{color:var(--good);background:rgba(55,214,167,.12)}
+  .flag.low{color:var(--warn);background:rgba(255,180,84,.14)}
+  .miniBtn{padding:3px 8px;font-size:12px;border-radius:7px}
+  .supBlock{border:1px solid var(--line);border-radius:10px;padding:10px;margin:10px 0}
+  .supBlock h3{margin:0 0 8px;font-size:14px;color:var(--accent)}
+  .srk{display:inline-block;width:48px;text-align:center;font-size:13px;color:var(--ink);background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:5px 4px;box-sizing:border-box}
+  .vrow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0 4px}
+  .vlabel{font-size:12px;color:var(--muted);margin-right:4px}
+  .vchip{font-size:12px;font-weight:600;border-radius:999px;padding:2px 9px;border:1px solid var(--line)}
+  .vchip.ok{color:var(--good);background:rgba(55,214,167,.12);border-color:rgba(55,214,167,.35)}
+  .vchip.bad{color:var(--bad);background:rgba(255,107,107,.12);border-color:rgba(255,107,107,.4)}
+  .vchip.none{color:var(--muted)}
+  .vmsg{font-size:12px;margin:2px 0 4px;color:var(--warn)}
+  .vmsg.ok{color:var(--good)}
+  .est-tag{font-size:13px;font-weight:600;color:var(--muted);-webkit-text-fill-color:var(--muted);vertical-align:middle;border:1px solid var(--line);border-radius:999px;padding:2px 9px}
+  .conf-note{font-size:12.5px;margin-top:10px;padding:8px 10px;border-radius:8px;border:1px solid var(--line)}
+  .conf-note.ok{color:var(--good);background:rgba(55,214,167,.10);border-color:rgba(55,214,167,.3)}
+  .conf-note.bad{color:#ffd2d2;background:rgba(255,107,107,.12);border-color:rgba(255,107,107,.4)}
+  .conf-note.none{color:var(--muted)}
+  .chiprow{display:flex;flex-wrap:wrap;gap:6px}
+  .note{font-size:12px;border-left:3px solid var(--warn);background:rgba(255,180,84,.07);
+    padding:8px 10px;border-radius:0 8px 8px 0;margin:10px 0;color:#f0d9b0}
+  .result-num{font-size:54px;font-weight:800;line-height:1;background:linear-gradient(180deg,#7aa2ff,#37d6a7);
+    -webkit-background-clip:text;background-clip:text;color:transparent;margin:6px 0}
+  .result-line{font-size:15px;margin:4px 0 0}
+  .badmsg{color:var(--bad);font-weight:600}
+  details{margin-top:14px;border:1px solid var(--line);border-radius:10px;padding:0 12px}
+  details>summary{cursor:pointer;padding:11px 0;font-weight:600;color:var(--accent2)}
+  .log{font-family:ui-monospace,Consolas,monospace;font-size:12px;max-height:300px;overflow:auto}
+  .log .me{color:#fff;background:rgba(91,140,255,.22);font-weight:700}
+  .log span{display:block;padding:2px 6px;border-radius:5px}
+  .log .nca{color:var(--muted);font-style:italic}
+  .disclaimer{font-size:11.5px;color:var(--muted);margin-top:14px;border-top:1px dashed var(--line);padding-top:10px}
+  .disclaimer li{margin:3px 0}
+  .warnInline{color:var(--warn);font-size:12px;margin-top:6px}
+  .status{font-size:12px;color:var(--muted);margin-top:8px;min-height:16px}
+  .cgrid{display:grid;grid-template-columns:repeat(10,1fr);gap:3px}
+  .cgrid .cell{font-size:10px;text-align:center;padding:3px 1px;border-radius:5px;background:var(--panel2);border:1px solid var(--line);line-height:1.2}
+  .cgrid .cell b{display:block;font-size:9px;color:var(--muted);font-weight:600}
+  .cgrid .cell.oc{opacity:.45}
+  .cgrid .cell.res{background:rgba(91,140,255,.16);border-color:rgba(91,140,255,.4)}
+  .pcttbl{display:flex;flex-wrap:wrap;gap:5px}
+  .pcttbl span{font-size:11px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:2px 9px;color:var(--ink)}
+  @media (max-width:560px){ .cgrid{grid-template-columns:repeat(5,1fr)} }
+  .pill{display:inline-block;font-size:11px;border:1px solid var(--line);border-radius:999px;padding:1px 8px;color:var(--muted);margin-left:6px}
+  @media (max-width:560px){ body{padding:10px} .result-num{font-size:44px} }
+</style>
+</head>
+<body>
+
+<h1>Kerala PSC Vacancy Calculator</h1>
+<p class="sub">How many vacancies before a candidate is advised, from a ranked list and the communal rotation chart.</p>
+
+<!-- ============ ROTATION CHART SELECTOR ============ -->
+<div class="card" style="padding:12px 16px">
+  <label for="chartSel" style="margin-top:0">Rotation chart (post type)</label>
+  <select id="chartSel" onchange="onChartChange()">
+    <option value="other">Posts other than Last Grade Services</option>
+    <option value="lgs">Last Grade Services (LGS)</option>
+  </select>
+</div>
+
+<!-- ============ STEP 1: IMPORT ============ -->
+<div class="card" id="card-import">
+  <h2><span class="step">STEP 1</span>Upload the ranked-list PDF</h2>
+  <input type="file" id="pdfFile" accept="application/pdf">
+  <div class="status" id="importStatus"></div>
+</div>
+
+<!-- ============ STEP 2: PREVIEW / EDIT ============ -->
+<div class="card hidden" id="card-preview">
+  <h2><span class="step">STEP 2</span>Verify &amp; edit the parsed data</h2>
+  <div id="metaBox" class="meta"></div>
+  <div id="parseCheck"></div>
+  <div id="parseWarnings"></div>
+
+  <label style="margin-top:14px">Main List <span class="muted" id="mainCount"></span></label>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th style="width:64px">Rank</th><th>Name</th><th style="width:120px">Community</th><th style="width:70px">Conf.</th><th style="width:40px"></th></tr></thead>
+      <tbody id="mainBody"></tbody>
+    </table>
+  </div>
+  <button class="miniBtn ghost" style="margin-top:8px" onclick="addMainRow()">+ Add main-list row</button>
+
+  <label style="margin-top:16px">Supplementary lists <span class="muted">(by community)</span></label>
+  <div id="supContainer"></div>
+  <div class="chiprow" style="margin-top:8px" id="addSupRow"></div>
+
+  <div id="daSection"></div>
+
+  <div class="note">Check rows flagged <span class="flag low">CHECK</span> against the PDF before computing.</div>
+
+  <button class="primary" style="width:100%;line-height:1.35" onclick="confirmData()">I've verified the ranked list was read correctly — open the calculator to see how many vacancies are needed to get a job at my rank</button>
+  <div class="status" id="previewStatus"></div>
+</div>
+
+<!-- ============ STEP 3: QUERY ============ -->
+<div class="card hidden" id="card-query">
+  <h2><span class="step">STEP 3</span>Query a candidate</h2>
+  <div class="row">
+    <div>
+      <label for="qList">List</label>
+      <select id="qList" onchange="onListChange()"></select>
+    </div>
+    <div>
+      <label for="qRank">Rank (position in that list)</label>
+      <input type="number" id="qRank" min="1" value="1">
+    </div>
+    <div>
+      <label for="qComm">Caste / Community</label>
+      <select id="qComm"></select>
+    </div>
+  </div>
+  <div class="warnInline hidden" id="commWarn"></div>
+  <button class="primary" style="margin-top:14px;width:100%" onclick="compute()">Calculate vacancy count</button>
+</div>
+
+<!-- ============ RESULT ============ -->
+<div class="card hidden" id="card-result">
+  <h2>Result</h2>
+  <div id="resultBody"></div>
+  <ul class="disclaimer">
+    <li>Models the <b>communal + SC/ST rotation only</b> — EWS (10%) and Differently-Abled (4%) overlays are not included.</li>
+    <li>Assumes one vacancy at a time in rotation order; no relinquishments, NCA reassignments, or rule changes. SC↔ST interchange not applied.</li>
+    <li>Chart used: <b id="discChart">Posts other than Last Grade Services</b>.</li>
+    <li>An estimate — verify the data and check official Kerala PSC sources.</li>
+  </ul>
+</div>
+
+<!-- ============ OFFICIAL CHART REFERENCE ============ -->
+<div class="card">
+  <details>
+    <summary>Rotation chart reference</summary>
+    <p class="muted" style="font-size:12px;margin:8px 0">
+      <b id="chartRefLabel">Posts other than Last Grade Services</b> · odd turns = Open, even = reserved ·
+      <a href="https://www.keralapsc.gov.in/rotation-chart" target="_blank" rel="noopener" style="color:var(--accent)">source</a>
+    </p>
+    <div id="pctTable"></div>
+    <div id="chartGrid" style="margin-top:12px"></div>
+  </details>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+/* ============================================================
+   MODULE 1 — ROTATION CHARTS (fixed, swappable constants)
+   Two official 100-category cycles. Turn t (1-indexed) uses chart[(t-1) % 100];
+   the cycle repeats indefinitely. Odd turns are O.C.; even turns are reserved.
+
+   Both VERIFIED cell-by-cell against https://www.keralapsc.gov.in/rotation-chart.
+   Turn counts equal the published reservation percentages:
+     other : O.C. 50, E/B/T 14, Muslim 12, SC 8, LC/AI 4, OBC 3, V 3, ST 2, + SIUC/SCCC/D/HN 1 each
+     lgs   : O.C. 50, E/B/T 11, Muslim 10, SC 8, LC/AI 4, OBC 6, V 2, ST 2, + D 2, SIUC 2, SCCC 2, HN 1
+   The LGS chart differs from "other" at 7 turns: 18,30,50,62,70,80,88.
+   ============================================================ */
+const ROTATION_CHARTS = {
+  other: {
+    label: "Posts other than Last Grade Services",
+    chart: [
+     "OC","E","OC","SC","OC","M","OC","LC","OC","OBC",
+     "OC","SC","OC","E","OC","M","OC","E","OC","V",
+     "OC","LC","OC","SC","OC","M","OC","E","OC","M",
+     "OC","SC","OC","E","OC","M","OC","SIUC","OC","OBC",
+     "OC","E","OC","ST","OC","M","OC","SCCC","OC","D",
+     "OC","SC","OC","E","OC","M","OC","E","OC","HN",
+     "OC","E","OC","SC","OC","M","OC","LC","OC","V",
+     "OC","SC","OC","E","OC","M","OC","E","OC","M",
+     "OC","E","OC","SC","OC","M","OC","E","OC","OBC",
+     "OC","ST","OC","LC","OC","M","OC","E","OC","V"
+    ]
+  },
+  lgs: {
+    label: "Last Grade Services",
+    chart: [
+     "OC","E","OC","SC","OC","M","OC","LC","OC","OBC",
+     "OC","SC","OC","E","OC","M","OC","D","OC","V",
+     "OC","LC","OC","SC","OC","M","OC","E","OC","OBC",
+     "OC","SC","OC","E","OC","M","OC","SIUC","OC","OBC",
+     "OC","E","OC","ST","OC","M","OC","SCCC","OC","OBC",
+     "OC","SC","OC","E","OC","M","OC","E","OC","HN",
+     "OC","SCCC","OC","SC","OC","M","OC","LC","OC","OBC",
+     "OC","SC","OC","E","OC","M","OC","E","OC","SIUC",
+     "OC","E","OC","SC","OC","M","OC","D","OC","OBC",
+     "OC","ST","OC","LC","OC","M","OC","E","OC","V"
+    ]
+  }
+};
+// The active chart (mutable so the UI can switch it). Defaults to non-LGS.
+let activeChartKey = "other";
+let ROTATION_CHART = ROTATION_CHARTS[activeChartKey].chart;
+
+const COMMUNITY_LABELS = {
+ GEN:"General / Open (no community)", E:"Ezhava / Thiyya / Billava", M:"Muslim",
+ SC:"Scheduled Caste", ST:"Scheduled Tribe", LC:"Latin Catholic / Anglo-Indian",
+ OBC:"Other Backward Class", V:"Viswakarma", D:"Dheevara", SIUC:"SIUC Nadar",
+ HN:"Hindu Nadar", SCCC:"SC Converts to Christianity", EWS:"Economically Weaker Section"
+};
+// short labels for the explanation sentence
+const SHORT = {OC:"open (merit)", E:"Ezhava/Thiyya", M:"Muslim", SC:"Scheduled Caste",
+ ST:"Scheduled Tribe", LC:"Latin Catholic", OBC:"OBC", V:"Viswakarma", D:"Dheevara",
+ SIUC:"SIUC Nadar", HN:"Hindu Nadar", SCCC:"SC Converts to Christianity"};
+
+const COMM_CODES = ["GEN","E","M","SC","ST","LC","OBC","V","D","SIUC","HN","SCCC","EWS"];
+// communities that actually receive a reserved turn in the ACTIVE chart (everything except OC).
+// GEN / EWS / DA never appear here, so they can only be advised on OC (merit) turns.
+// Recomputed by setChart() whenever the active chart changes.
+let RESERVED_CODES = new Set(ROTATION_CHART.filter(x => x !== "OC"));
+
+// Switch the active rotation chart ("other" | "lgs") and refresh derived state.
+function setChart(key){
+  if(!ROTATION_CHARTS[key]) return;
+  activeChartKey = key;
+  ROTATION_CHART = ROTATION_CHARTS[key].chart;
+  RESERVED_CODES = new Set(ROTATION_CHART.filter(x => x !== "OC"));
+}
+
+/* ============================================================
+   MODULE 2 — COMMUNITY TEXT -> CODE MAPPING
+   ============================================================ */
+function mapCommunityText(raw){
+  if(!raw) return "GEN";
+  const t = String(raw).toUpperCase().trim();
+  if(!t) return "GEN";
+  if(t.includes("SCCC") || /CONVERTS\s+TO\s+CHRISTIANITY/.test(t)) return "SCCC";
+  if(t.includes("SIUC")) return "SIUC";
+  if(t.includes("HINDU NADAR")) return "HN";
+  if(t.includes("EWS") || /ECONOMICALLY\s+WEAKER/.test(t)) return "EWS";
+  if(/EZHAVA|EZHUVA|THIYYA|BILLAVA/.test(t)) return "E";
+  if(/MUSLIM|MAPPILA/.test(t) || /^M-/.test(t)) return "M";
+  if(/LATIN|ANGLO/.test(t) || /^LC\b/.test(t) || /^LC-/.test(t) || t==="LC") return "LC";
+  if(t.includes("OBC")) return "OBC";
+  if(/VISWAKARMA|ASARI/.test(t) || /^V-/.test(t)) return "V";
+  if(/DHEEVARA|ARAYAN/.test(t) || /^D-/.test(t)) return "D";
+  if(/SCHEDULED TRIBE/.test(t) || /^ST-/.test(t) || /KANIKAR|KANIKKAR|KANIKARAN/.test(t)) return "ST";
+  if(/SCHEDULED CASTE/.test(t) || /^SC-/.test(t) ||
+     /PULAYA|CHERAMAR|PARAVAN|KURAVA|MANNAN|SAMBAVA|THANDAN|AYYANAVAR|MALAYAN|VANNAN/.test(t)) return "SC";
+  return "GEN";
+}
+
+// Heading -> CODE for supplementary sub-sections. Returns "DA" for differently-abled, null if not a heading.
+function mapSupHeading(line){
+  const t = String(line).toUpperCase();
+  if(/ECONOMICALLY\s+WEAKER/.test(t)) return "EWS";
+  if(/CONVERTS\s+TO\s+CHRISTIANITY/.test(t) || t.includes("SCCC")) return "SCCC";
+  if(t.includes("SIUC")) return "SIUC";
+  if(t.includes("HINDU NADAR")) return "HN";
+  if(/EZHAVA|THIYYA|BILLAVA|EZHUVA/.test(t)) return "E";
+  if(t.includes("MUSLIM")) return "M";
+  if(/LATIN|ANGLO|A\.I/.test(t)) return "LC";
+  if(t.includes("OBC")) return "OBC";
+  if(t.includes("VISWAKARMA")) return "V";
+  if(t.includes("DHEEVARA")) return "D";
+  if(/SCHEDULED\s+TRIBE/.test(t)) return "ST";
+  if(/SCHEDULED\s+CASTE/.test(t)) return "SC";
+  if(/DIFFERENTLY\s+ABLED|LOW VISION|HEARING IMPAIR|LOCOMOTOR|BLINDNESS|DEAF|DA-MULTIPLE|DA-/.test(t)) return "DA";
+  return null;
+}
+// readable disability sub-category for a Differently-Abled heading line (the four RPwD groups)
+function daCategoryLabel(line){
+  const t = String(line).toUpperCase();
+  if(/LOW VISION|BLIND/.test(t)) return "Blindness / Low Vision";
+  if(/HEARING|DEAF|HARD OF/.test(t)) return "Deaf / Hard of Hearing";
+  if(/LOCOMOTOR|CEREBRAL|\bLD\b|LD\/CP|LD-CP|LEPROSY|DWARF|ACID|MUSCULAR/.test(t)) return "Locomotor Disability";
+  if(/AUTIS|INTELLECTUAL|LEARNING|MENTAL|MULTIPLE/.test(t)) return "Autism / Intellectual / Multiple";
+  return "Differently Abled";
+}
+
+/* ============================================================
+   MODULE 3 — PARSER
+   Input: array of text lines (reading order). Output: data model.
+   ============================================================ */
+const DOB_RE = /\b(\d{2}\/\d{2}\/\d{4})\b/;
+// candidate row: Rank Sl.No Name [Test Int Wtg Total ...marks] DOB Community [Remarks]
+//   - Sl.No may be a SINGLE digit (real lists do this), so \d+ not \d{2,}.
+//   - Real KPSC lists insert numeric mark columns between Name and DOB; those land in the
+//     lazy Name group and are stripped by cleanName(). The dd/mm/yyyy DOB is the delimiter.
+const ROW_RE = /^\s*(\d{1,4})\s+(\d+)\s+(.+?)\s+(\d{2}\/\d{2}\/\d{4})\s*(.*)$/;
+
+function isHeadingLine(t){
+  return /MAIN LIST|SUPPLEMENTARY LIST|^NOTE\b|^NOTE\(|LIST OF DIFFERENTLY|ECONOMICALLY WEAKER/i.test(t)
+      || mapSupHeading(t) !== null;
+}
+// A standalone community label line (e.g. "OBC-VILAKKITHALA NAIR") that isn't a candidate row.
+function looksLikeStandaloneCommunity(t){
+  if(ROW_RE.test(t)) return false;
+  if(/^\s*\d/.test(t)) return false;        // starts with a number => not a label
+  return mapCommunityText(t) !== "GEN";
+}
+// Collect line i plus the following non-row, non-section-marker lines, so a community
+// name/heading that WRAPPED onto extra physical lines can be re-joined before mapping.
+function joinAhead(lines, i, max){
+  max = max || 3;
+  const parts = [lines[i]];
+  for(let j=i+1; j<lines.length && parts.length<max; j++){
+    const nx = lines[j];
+    if(!nx) break;
+    if(ROW_RE.test(nx)) break;                                  // a candidate row ends the label
+    if(/MAIN LIST|SUPPLEMENTARY LIST|^NOTE\b|^NOTE\s*\(/i.test(nx)) break; // a section marker ends it
+    parts.push(nx);
+  }
+  return parts;
+}
+// A row's community can WRAP onto the following line(s): e.g. the row tail is "FORWARD SUB"
+// and the next line is "CASTE (EWS)". When the tail alone maps to GEN, try appending the
+// next non-row line(s) and re-mapping. Returns {code, consumed} or null. Only used when the
+// tail is non-empty (a partial community) — empty tails use the preceding-line buffer instead.
+function joinForwardComm(lines, i, rest){
+  let acc = rest;
+  for(let j=i+1, taken=0; j<lines.length && taken<2; j++, taken++){
+    const nx = lines[j];
+    if(!nx) break;
+    if(ROW_RE.test(nx)) break;
+    if(/MAIN LIST|SUPPLEMENTARY LIST|^NOTE\b|^NOTE\s*\(/i.test(nx)) break;
+    acc += " " + nx;
+    const c = mapCommunityText(acc);
+    if(c !== "GEN") return {code:c, consumed:taken+1};
+  }
+  return null;
+}
+// Is `specific` a more precise reading of the same wrapped label than `generic`?
+// The only ambiguous prefix in the mapping tables is "SCHEDULED CASTE" (SC) which is a
+// prefix of "SCHEDULED CASTE CONVERTS TO CHRISTIANITY" (SCCC).
+function refines(generic, specific){
+  return generic === "SC" && specific === "SCCC";
+}
+// Resolve a (possibly wrapped) label starting at line i, using `mapper` (mapSupHeading or
+// mapCommunityText). Returns {code, consumed} or null. Conservative: it only swallows extra
+// lines when doing so RECOVERS a code the first fragment lacked, or REFINES SC -> SCCC.
+function resolveWrappedLabel(lines, i, mapper, gen){
+  const parts = joinAhead(lines, i, 3);
+  let code = mapper(parts[0]); if(code === gen) code = null;
+  let consumed = 1;
+  for(let k=2; k<=parts.length; k++){
+    const c2 = mapper(parts.slice(0,k).join(" "));
+    if(c2 === gen || c2 == null) continue;
+    if(!code){ code = c2; consumed = k; }                       // first fragment didn't map
+    else if(c2 !== code && refines(code, c2)){ code = c2; consumed = k; break; } // SC -> SCCC
+  }
+  return code ? {code, consumed} : null;
+}
+
+function parseLines(rawLines){
+  // normalise
+  const lines = rawLines.map(l => String(l).replace(/\s+/g," ").trim());
+  const data = { meta:{}, mainList:[], supplementary:{}, ews:[], da:[], warnings:[] };
+
+  // ---- header meta (best effort, scan first ~40 lines) ----
+  const head = lines.slice(0,60).join("\n");
+  let m;
+  if((m = head.match(/Cat(?:egory)?\.?\s*No\.?\s*[:\-]?\s*([0-9]{1,4}\/\d{4})/i))) data.meta.category = m[1];
+  else if((m = head.match(/\b(\d{1,4}\/20\d{2})\b/))) data.meta.category = m[1];
+  if((m = head.match(/Ranked?\s*List\s*No\.?\s*[:\-]?\s*([0-9A-Za-z\/\-]+)/i))) data.meta.rankedListNo = m[1];
+  // district: match a real Kerala district name (more reliable than a "District:" label,
+  // which often captures neighbouring words like "Ranked List").
+  const DISTRICTS = ["Thiruvananthapuram","Kollam","Pathanamthitta","Alappuzha","Kottayam",
+    "Idukki","Ernakulam","Thrissur","Palakkad","Malappuram","Kozhikode","Wayanad","Kannur","Kasaragod"];
+  for(const dn of DISTRICTS){ if(new RegExp("\\b"+dn+"\\b","i").test(head)){ data.meta.district = dn; break; } }
+  // post title: prefer the clean span in "...for the post of <TITLE> on Rs ..." (matched on a
+  // newline-flattened header, since the title often wraps across lines); else a label.
+  const headFlat = lines.slice(0,14).join(" ").replace(/\s+/g," ");
+  if((m = headFlat.match(/for the post of\s+(.+?)\s+on\s+(?:Rs|a pay|the pay|the scale|`)/i))) data.meta.post = m[1].trim();
+  else if((m = headFlat.match(/for the post of\s+(.+?)(?:\s+\(?Cat|\s+in\s+[A-Z])/))) data.meta.post = m[1].trim();
+  else if((m = head.match(/(?:Name of Post|Post)\s*[:\-]?\s*([A-Za-z0-9 ,.\-\/&()]+)/i))) data.meta.post = m[1].trim();
+  if(data.meta.post) data.meta.post = data.meta.post.replace(/^of\s+/i,"").trim();
+
+  // ---- section state machine ----
+  let section = "pre";   // pre | main | supp | ews | da | done
+  let supCode = null;    // current supplementary community
+  let pendingComm = null;
+  let expectedMainRank = 1;
+  let supRanks = {};     // code -> expected next rank within sub-section
+  let daCat = "Differently Abled";  // current disability sub-category (when supCode === "DA")
+
+  function pushSup(code, name){
+    // Differently-Abled list: stored with its disability category, NOT consumed by the rotation
+    // (it is the separate 4% horizontal overlay — surfaced read-only in the preview).
+    if(code === "DA"){ data.da.push({ name, category: daCat }); return; }
+    if(code === "EWS"){ (data.ews).push(name); }
+    if(!data.supplementary[code]) data.supplementary[code] = [];
+    data.supplementary[code].push(name);
+  }
+
+  for(let i=0;i<lines.length;i++){
+    const line = lines[i];
+    if(!line) continue;
+
+    // section transitions (monotonic: pre -> main -> supp -> done). State guards make a
+    // repeated running page-header like "Main List" idempotent instead of resetting counters.
+    if(/MAIN LIST/i.test(line)){ if(section==="pre"){ section="main"; expectedMainRank=1; pendingComm=null; } continue; }
+    if(/SUPPLEMENTARY LIST/i.test(line)){ if(section==="pre"||section==="main"){ section="supp"; supCode=null; pendingComm=null; } continue; }
+    if(/^NOTE\b|^NOTE\s*\(/i.test(line)){ section="done"; continue; }
+    if(section==="done") continue;
+
+    // detect candidate row
+    const rm = line.match(ROW_RE);
+
+    // Some lists (e.g. General Service gazetted posts) have NO explicit "Main List" header —
+    // candidates follow the column header directly. Auto-start the main section at the first
+    // real candidate row. ROW_RE requires a dd/mm/yyyy DOB, so header lines never trigger this.
+    if(section==="pre" && rm){ section="main"; expectedMainRank=1; }
+
+    if(section==="main"){
+      if(rm){
+        const rank = parseInt(rm[1],10);
+        let name = cleanName(rm[3]);
+        let rest = (rm[5]||"").trim();
+        let comm, conf="ok", reason="";
+        if(rest){
+          comm = mapCommunityText(rest);
+          if(comm==="GEN"){
+            const fwd = joinForwardComm(lines, i, rest);   // community wrapped onto next line?
+            if(fwd){
+              comm=fwd.code; i += fwd.consumed;
+              // "FORWARD SUB CASTE (EWS)" wraps very commonly and is unambiguous; treat that
+              // as confident. EWS is a merit overlay anyway and never changes the rotation result.
+              if(comm==="EWS"){ reason="forward community (EWS) — label wrapped across lines"; }
+              else { conf="low"; reason="community rejoined from wrapped line(s)"; }
+            }
+            else if(pendingComm){ comm=pendingComm; conf="low"; reason="community taken from preceding line"; }
+            else if(rest.length>1){ conf="low"; reason="community text not recognised → defaulted to GEN"; }
+          }
+        } else if(pendingComm){
+          comm = pendingComm; conf="low"; reason="community taken from preceding line";
+        } else {
+          // a blank "Commy" column is the standard, confident representation of an
+          // Open / merit candidate — not a parse error, so do NOT flag it.
+          comm = "GEN"; reason="open / merit (no community listed)";
+        }
+        if(rank !== expectedMainRank){ conf="low"; reason=(reason?reason+"; ":"")+"rank not sequential (expected "+expectedMainRank+")"; }
+        data.mainList.push({rank, name, community:comm, conf, reason});
+        expectedMainRank = rank + 1;
+        pendingComm = null;
+      } else if(looksLikeStandaloneCommunity(line)){
+        // Section markers (Main/Supplementary/NOTE) are already handled above, so any
+        // standalone community label here is an inline "Commy" value for the NEXT row.
+        // Re-join wrapped fragments (e.g. SC-... / SCCC) before mapping to a CODE.
+        const r = resolveWrappedLabel(lines, i, mapCommunityText, "GEN");
+        if(r){ pendingComm = r.code; i += r.consumed-1; }
+        else pendingComm = mapCommunityText(line);
+      }
+      // else: watermark/junk -> ignore
+      continue;
+    }
+
+    if(section==="supp"){
+      // a heading switches the active community (re-joining wrapped headings first,
+      // so "Scheduled Caste Converts to / Christianity" resolves to SCCC, not SC)
+      if(!rm){
+        const h = resolveWrappedLabel(lines, i, mapSupHeading, null);
+        if(h){ supCode = h.code; supRanks[h.code]=1; pendingComm=null;
+          if(h.code==="DA") daCat = daCategoryLabel(line);   // remember the disability sub-category
+          i += h.consumed-1; continue; }
+      }
+      if(rm){
+        const name = cleanName(rm[3]);
+        // community may also be present in the row; prefer the active heading, fall back to row text
+        let code = supCode;
+        if(!code){
+          const rc = mapCommunityText(rm[5]||"");
+          if(rc!=="GEN") code = rc;
+        }
+        if(code){ pushSup(code, name); }
+        else { data.warnings.push("Supplementary row with no community heading skipped: \""+name+"\""); }
+        continue;
+      }
+      // standalone community label inside supplementary acts as heading too
+      if(looksLikeStandaloneCommunity(line)){
+        const c = mapCommunityText(line);
+        if(c!=="GEN"){ supCode=c; }
+      }
+      continue;
+    }
+  }
+
+  // Official footer tallies (present in most KPSC lists, e.g. "Number of Candidates in the Main
+  // List : 33"). Captured so the preview can verify the parse is complete against the list's own
+  // totals. Scanned over the whole document (they sit after the candidate sections).
+  const allText = lines.join("\n");
+  const grab = re => { const m = allText.match(re); return m ? parseInt(m[1],10) : null; };
+  data.officialCounts = {
+    main:  grab(/Candidates in the Main List\s*[:\-]?\s*(\d+)/i),
+    supp:  grab(/Candidates in the Supplementary List\s*[:\-]?\s*(\d+)/i),
+    da:    grab(/Candidates in the list of Differently[ -]?Abled[^:\d]*[:\-]?\s*(\d+)/i),
+    total: grab(/Total number of Candidates in the Ranked List\s*[:\-]?\s*(\d+)/i)
+  };
+
+  // Multi-column / non-standard layout detection: count candidate-like lines (they carry a
+  // dd/mm/yyyy DOB) that did NOT parse as a row. Two-column lists (e.g. some "By Transfer"
+  // lists) put a candidate's rank on a separate line, so those rows are missed entirely.
+  const dobCand = lines.filter(l => /\b\d{2}\/\d{2}\/\d{4}\b/.test(l)
+    && !/brought into force|effect from|\bdated\b|following is the list|held on/i.test(l));
+  const unparsedDob = dobCand.filter(l => !ROW_RE.test(l)).length;
+  if(unparsedDob > 8){
+    data.warnings.unshift("⚠ This list looks like a multi-column or non-standard layout — "+unparsedDob+
+      " candidate-like lines could not be read automatically, so the parse is likely INCOMPLETE. "+
+      "Verify the preview carefully, or enter the list manually (multi-column 'By Transfer' lists are not reliably parsed).");
+  }
+
+  // collect warnings about flagged rows
+  const flagged = data.mainList.filter(r=>r.conf==="low").length;
+  if(flagged) data.warnings.unshift(flagged+" main-list row(s) need checking (highlighted below).");
+  if(!data.mainList.length) data.warnings.unshift("No Main List rows were detected — check that the text contains a \"Main List\" section, or edit manually below.");
+
+  return data;
+}
+
+function cleanName(s){
+  return String(s)
+    .replace(/\b\d{2}\/\d{2}\/\d{4}\b/g,"")
+    .replace(/[|]/g,"")
+    .replace(/\s+/g," ")
+    .trim()
+    // strip trailing numeric mark columns (Test / Interview / Weightage / Total), e.g.
+    // "NIDHIN RAJ 80.00 13.0 93.00" -> "NIDHIN RAJ". Names never end in a number.
+    .replace(/(?:\s+\d+(?:\.\d+)?){1,8}$/,"")
+    .trim();
+}
+
+/* ============================================================
+   MODULE 4 — SIMULATION (the advice algorithm)
+   ============================================================ */
+function simulate(data, targetId, maxTurns){
+  maxTurns = maxTurns || 5000;
+  const advised = new Set();
+  const log = [];
+
+  const main = data.mainList.map(r => ({ id:"M-"+r.rank, rank:r.rank, community:r.community, name:r.name }));
+  const supLists = {};
+  for(const code in data.supplementary){
+    supLists[code] = (data.supplementary[code]||[]).map((nm,idx)=>({ id:"S-"+code+"-"+idx, name:nm }));
+  }
+  const supPtr = {};
+
+  const lowestMain = (pred) => {
+    let best=null;
+    for(const c of main){ if(advised.has(c.id)) continue; if(pred(c)){ if(!best || c.rank<best.rank) best=c; } }
+    return best;
+  };
+  // only communities that actually get a reserved turn can ever be drawn from supplementary
+  const everyoneExhausted = () => {
+    if(main.some(c=>!advised.has(c.id))) return false;
+    for(const code in supLists){
+      if(!RESERVED_CODES.has(code)) continue;         // EWS/GEN/DA supplementary is never consumed
+      if((supPtr[code]||0) < supLists[code].length) return false;
+    }
+    return true;
+  };
+
+  for(let t=1; t<=maxTurns; t++){
+    const slot = ROTATION_CHART[(t-1)%100];
+    let advisedId=null, src=null, name=null;
+
+    if(slot==="OC"){
+      const cand = lowestMain(()=>true);   // highest-ranked person left, any community, on merit
+      if(cand){ advisedId=cand.id; name=cand.name; src={type:"OC", community:cand.community}; }
+      else { src={type:"NCA-OC"}; }
+    } else {
+      const C = slot;
+      const cand = lowestMain(c=>c.community===C);
+      if(cand){ advisedId=cand.id; name=cand.name; src={type:"reserved", community:C, fromMain:true}; }
+      else {
+        const list = supLists[C]||[];
+        const idx = supPtr[C]||0;
+        if(idx < list.length){
+          advisedId=list[idx].id; name=list[idx].name; supPtr[C]=idx+1;
+          src={type:"reserved", community:C, fromSup:true};
+        } else {
+          src={type:"NCA", community:C};
+        }
+      }
+    }
+
+    if(advisedId) advised.add(advisedId);
+    log.push({turn:t, slot, advisedId, name, src});
+    if(advisedId && advisedId===targetId) return {found:true, turn:t, log, slot, src};
+    if(everyoneExhausted()) break;
+  }
+  return {found:false, log};
+}
+
+/* ============================================================
+   MODULE 5 — UI WIRING
+   ============================================================ */
+let data = null;        // confirmed data model used by Step 3
+let parsed = null;      // last parse result (drives the preview)
+
+if(window.pdfjsLib){
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+}
+
+document.getElementById("pdfFile").addEventListener("change", async (e)=>{
+  const file = e.target.files[0]; if(!file) return;
+  const st = document.getElementById("importStatus");
+  if(!window.pdfjsLib){ st.textContent="Could not load the PDF reader (check your internet connection)."; return; }
+  st.textContent="Reading PDF…";
+  try{
+    const buf = await file.arrayBuffer();
+    const lines = await extractPdfLines(buf);
+    parsed = parseLines(lines);
+    if(parsed.mainList.length===0 && looksLikeScan(lines)){
+      parsed.warnings = ["⚠ This looks like a SCANNED / image-only PDF — no selectable text could be read from it. "+
+        "This tool needs a text PDF (the official Kerala PSC ranked lists are text PDFs you can select/copy). "+
+        "Please upload the text version of the list, or add the rows manually below."];
+      st.textContent="Scanned / image-only PDF — see the note below.";
+    } else {
+      st.textContent = parsed.mainList.length ? "Done — review the preview below." : "No candidate rows detected — see the note below.";
+    }
+    renderPreview(parsed);
+  }catch(err){
+    console.error(err);
+    st.textContent="Could not read this PDF: "+err.message;
+  }
+});
+
+// near-empty text extraction => the PDF is almost certainly a scan / image-only document
+function looksLikeScan(lines){
+  const chars = lines.reduce((n,l)=>n+l.length, 0);
+  return lines.length < 6 || chars < 200;
+}
+
+async function extractPdfLines(buf){
+  const pdf = await pdfjsLib.getDocument({data:buf}).promise;
+  const out = [];
+  for(let p=1;p<=pdf.numPages;p++){
+    const page = await pdf.getPage(p);
+    const tc = await page.getTextContent();
+    // group items by y (rounded), then sort by x within a line.
+    // Tolerance 6 (not 3): in many lists — esp. "By Transfer" — the Rank cell sits ~3-4px off the
+    // row's baseline, so a tight tolerance split it onto its own line and the row lost its rank.
+    // Rows are ~14-20px apart, so 6 reliably keeps the rank with its row without merging rows.
+    const Y_TOL = 6;
+    const rows = {};
+    for(const it of tc.items){
+      if(!it.str || !it.str.trim()) continue;
+      const y = Math.round(it.transform[5]);
+      const x = it.transform[4];
+      let key=null;
+      for(const k in rows){ if(Math.abs(k - y) <= Y_TOL){ key=k; break; } }
+      if(key===null){ key=y; rows[key]=[]; }
+      rows[key].push({x, s:it.str});
+    }
+    const ys = Object.keys(rows).map(Number).sort((a,b)=>b-a); // top -> bottom
+    for(const y of ys){
+      const line = rows[y].sort((a,b)=>a.x-b.x).map(o=>o.s).join(" ").replace(/\s+/g," ").trim();
+      if(line) out.push(line);
+    }
+  }
+  return out;
+}
+
+/* ---------- preview rendering ---------- */
+function commSelect(cls, value){
+  let h='<select class="'+cls+'">';
+  for(const c of COMM_CODES){ h+='<option value="'+c+'"'+(c===value?' selected':'')+'>'+c+'</option>'; }
+  h+='</select>';
+  return h;
+}
+
+function renderPreview(d){
+  document.getElementById("card-preview").classList.remove("hidden");
+  // meta
+  const mb = document.getElementById("metaBox");
+  const m = d.meta||{};
+  const parts = [];
+  if(m.post) parts.push('<span><b>Post:</b> '+esc(m.post)+'</span>');
+  if(m.category) parts.push('<span><b>Category:</b> '+esc(m.category)+'</span>');
+  if(m.district) parts.push('<span><b>District:</b> '+esc(m.district)+'</span>');
+  if(m.rankedListNo) parts.push('<span><b>Ranked List No:</b> '+esc(m.rankedListNo)+'</span>');
+  mb.innerHTML = parts.length ? parts.join("") : '<span class="muted">No header metadata detected.</span>';
+
+  // completeness check against the list's own footer totals
+  renderCheck(d);
+
+  // warnings
+  const wb = document.getElementById("parseWarnings");
+  wb.innerHTML = (d.warnings&&d.warnings.length) ? '<div class="note">'+d.warnings.map(esc).join("<br>")+'</div>' : "";
+
+  // main rows
+  const body = document.getElementById("mainBody");
+  body.innerHTML = "";
+  d.mainList.forEach(r=> body.insertAdjacentHTML("beforeend", mainRowHtml(r)));
+  document.getElementById("mainCount").textContent = "("+d.mainList.length+" candidates)";
+
+  // supplementary
+  renderSup(d);
+  renderDA(d);
+
+  // add-supplementary chips
+  const addRow = document.getElementById("addSupRow");
+  addRow.innerHTML = "";
+  COMM_CODES.filter(c=>c!=="GEN").forEach(c=>{
+    addRow.insertAdjacentHTML("beforeend",
+      '<button class="miniBtn ghost" onclick="addSupSection(\''+c+'\')">+ '+c+'</button>');
+  });
+
+  document.getElementById("card-preview").scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+function mainRowHtml(r){
+  const flag = r.conf==="low"
+    ? '<span class="flag low" title="'+esc(r.reason||"")+'">CHECK</span>'
+    : '<span class="flag ok">ok</span>';
+  return '<tr>'+
+    '<td><input class="rk" type="number" value="'+(r.rank||"")+'"></td>'+
+    '<td><input class="nm" value="'+esc(r.name||"")+'"></td>'+
+    '<td>'+commSelect("cm", r.community||"GEN")+'</td>'+
+    '<td>'+flag+'</td>'+
+    '<td><button class="miniBtn ghost" title="delete" onclick="this.closest(\'tr\').remove()">✕</button></td>'+
+    '</tr>';
+}
+function addMainRow(){
+  const body = document.getElementById("mainBody");
+  const next = body.querySelectorAll("tr").length+1;
+  body.insertAdjacentHTML("beforeend", mainRowHtml({rank:next, name:"", community:"GEN", conf:"ok"}));
+}
+
+// Verify the parse against the list's own footer totals ("Number of Candidates in the Main List…").
+function renderCheck(d){
+  const el = document.getElementById("parseCheck");
+  const oc = d.officialCounts || {};
+  if(oc.main==null && oc.supp==null && oc.da==null && oc.total==null){ el.innerHTML=""; return; }
+  const pMain = d.mainList.length;
+  const pSupp = Object.values(d.supplementary||{}).reduce((s,a)=>s+a.length,0);
+  const pDA   = (d.da||[]).length;
+  const pTot  = pMain + pSupp + pDA;
+  let anyBad = false;
+  const chip = (label, parsed, official) => {
+    if(official==null) return '<span class="vchip none">'+label+' '+parsed+'</span>';
+    const ok = parsed===official, diff = parsed-official;
+    if(!ok) anyBad = true;
+    return '<span class="vchip '+(ok?'ok':'bad')+'">'+label+' '+parsed+'/'+official+' '+
+      (ok?'✓':'⚠ '+(diff>0?'+':'')+diff)+'</span>';
+  };
+  el.innerHTML =
+    '<div class="vrow"><span class="vlabel">Parse check vs the list\'s own totals</span>'+
+      chip('Main', pMain, oc.main)+chip('Supplementary', pSupp, oc.supp)+
+      chip('Diff-Abled', pDA, oc.da)+chip('Total', pTot, oc.total)+'</div>'+
+    (anyBad ? '<div class="vmsg">⚠ Counts don\'t match the PDF\'s stated totals — some rows were likely mis-read or missed. Check the lists below.</div>'
+            : '<div class="vmsg ok">✓ All counts match the PDF\'s stated totals.</div>');
+}
+
+function renderSup(d){
+  const cont = document.getElementById("supContainer");
+  cont.innerHTML = "";
+  const codes = Object.keys(d.supplementary||{});
+  if(!codes.length){ cont.innerHTML = '<p class="muted" style="font-size:12px">No supplementary lists imported. Add them below to improve accuracy.</p>'; }
+  codes.forEach(code=> cont.insertAdjacentHTML("beforeend", supBlockHtml(code, d.supplementary[code])));
+}
+
+// Differently-Abled list (separate 4% reservation overlay). Shown read-only & grouped by
+// disability category — it is NOT consumed by the communal rotation.
+function renderDA(d){
+  const cont = document.getElementById("daSection");
+  cont.innerHTML = "";
+  const da = (d.da||[]).filter(x=>x && x.name);
+  if(!da.length) return;
+  // group entries by disability category, preserving order
+  const groups = []; const idx = {};
+  da.forEach(e=>{ const c=e.category||"Differently Abled";
+    if(idx[c]===undefined){ idx[c]=groups.length; groups.push({cat:c, names:[]}); } groups[idx[c]].names.push(e.name); });
+  let blocks = groups.map(g=>{
+    const rows = g.names.map((n,i)=>
+      '<tr><td><span class="srk">'+(i+1)+'</span></td>'+
+      '<td><input class="snm" value="'+esc(n)+'" readonly></td>'+
+      '<td><span class="flag ok" style="color:var(--accent2);background:rgba(55,214,167,.10)">'+esc(g.cat)+'</span></td></tr>').join("");
+    return '<div class="supBlock">'+
+      '<h3 style="color:var(--accent2)">'+esc(g.cat)+' <span class="muted" style="font-weight:400">('+g.names.length+')</span></h3>'+
+      '<div class="tbl-wrap" style="max-height:240px">'+
+      '<table><colgroup><col style="width:64px"><col><col style="width:230px"></colgroup><tbody>'+rows+'</tbody></table>'+
+      '</div></div>';
+  }).join("");
+  cont.innerHTML =
+    '<label style="margin-top:16px">Differently-Abled list <span class="muted">(4% reservation — separate overlay)</span></label>'+
+    '<div class="note" style="border-left-color:var(--accent2);background:rgba(55,214,167,.06);color:#bfe9d8">'+
+      'These candidates are advised under the <b>separate 4% Differently-Abled reservation</b> (a horizontal overlay), '+
+      '<b>not</b> the communal rotation calculated here. A DA candidate is advised by <b>whichever comes first</b>: '+
+      'their normal communal-rotation turn, or a DA-reserved turn drawn from this list. Shown for reference only.'+
+    '</div>'+ blocks;
+}
+function supBlockHtml(code, names){
+  const rows = (names||[]).map((n,i)=> supRowHtml(code, n, i)).join("");
+  return '<div class="supBlock" data-code="'+code+'">'+
+    '<h3>'+code+' — '+esc(COMMUNITY_LABELS[code]||code)+' <span class="muted cnt" style="font-weight:400">('+(names?names.length:0)+')</span></h3>'+
+    '<div class="tbl-wrap" style="max-height:240px">'+
+      '<table><colgroup><col style="width:64px"><col><col style="width:120px"><col style="width:70px"><col style="width:40px"></colgroup>'+
+      '<tbody class="supRows">'+rows+'</tbody></table>'+
+    '</div>'+
+    '<button class="miniBtn ghost" style="margin-top:6px" onclick="addSupName(this)">+ add name</button>'+
+    '</div>';
+}
+// supplementary row: same look as a main-list row, but rank is positional (read-only) and the
+// community dropdown is fixed (disabled) to this block's community.
+function supRowHtml(code, n, i){
+  return '<tr class="supRow">'+
+    '<td><span class="srk">'+((i||0)+1)+'</span></td>'+
+    '<td><input class="snm" value="'+esc(n||"")+'"></td>'+
+    '<td><select class="cm" disabled><option selected>'+code+'</option></select></td>'+
+    '<td><span class="flag ok">ok</span></td>'+
+    '<td><button class="miniBtn ghost" title="delete" onclick="delSupRow(this)">✕</button></td>'+
+    '</tr>';
+}
+function addSupName(btn){
+  const block = btn.closest(".supBlock");
+  block.querySelector(".supRows").insertAdjacentHTML("beforeend", supRowHtml(block.dataset.code, "", block.querySelectorAll(".supRow").length));
+  renumberSup(block);
+}
+function delSupRow(btn){
+  const block = btn.closest(".supBlock");
+  btn.closest(".supRow").remove();
+  renumberSup(block);
+}
+function renumberSup(block){
+  const rows = [...block.querySelectorAll(".supRow")];
+  rows.forEach((r,i)=> r.querySelector(".srk").textContent = i+1);
+  const cnt = block.querySelector(".cnt");
+  if(cnt) cnt.textContent = "("+rows.length+")";
+}
+function addSupSection(code){
+  // if already present, do nothing
+  if([...document.querySelectorAll(".supBlock")].some(s=>s.dataset.code===code)) return;
+  document.getElementById("supContainer").insertAdjacentHTML("beforeend", supBlockHtml(code, []));
+}
+
+/* ---------- read edited preview back into data model ---------- */
+function readPreview(){
+  const mainList = [];
+  document.querySelectorAll("#mainBody tr").forEach(tr=>{
+    const rank = parseInt(tr.querySelector(".rk").value,10);
+    const name = tr.querySelector(".nm").value.trim();
+    const community = tr.querySelector(".cm").value;
+    if(name && !isNaN(rank)) mainList.push({rank, name, community});
+  });
+  mainList.sort((a,b)=>a.rank-b.rank);
+
+  const supplementary = {};
+  document.querySelectorAll(".supBlock").forEach(sec=>{
+    const code = sec.dataset.code;
+    if(!code) return;                       // skip the read-only Differently-Abled blocks
+    const names = [];
+    sec.querySelectorAll(".snm").forEach(inp=>{ const v=inp.value.trim(); if(v) names.push(v); });
+    if(names.length) supplementary[code] = names;
+  });
+
+  // carry the Differently-Abled list through unchanged (read-only, not consumed by the rotation)
+  return { meta: parsed?parsed.meta:{}, mainList, supplementary, da: parsed?parsed.da:[],
+           officialCounts: parsed?parsed.officialCounts:null };
+}
+
+function confirmData(){
+  data = readPreview();
+  const st = document.getElementById("previewStatus");
+  if(!data.mainList.length){ st.textContent="Add at least one Main List candidate first."; return; }
+  st.textContent = "Loaded "+data.mainList.length+" main-list candidates"+
+    (Object.keys(data.supplementary).length? " + "+Object.keys(data.supplementary).length+" supplementary list(s)":"")+".";
+  buildQuery();
+  document.getElementById("card-query").classList.remove("hidden");
+  document.getElementById("card-query").scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+/* ---------- Step 3 form ---------- */
+function buildQuery(){
+  const ql = document.getElementById("qList");
+  ql.innerHTML = '<option value="MAIN">Main List ('+data.mainList.length+')</option>';
+  for(const code in data.supplementary){
+    // Only communities with a reserved turn are reachable via the rotation. EWS (and any
+    // differently-abled list) are separate overlays not modelled here, so they are not
+    // offered as queryable lists — that avoids a misleading "not reachable" answer.
+    if(!RESERVED_CODES.has(code)) continue;
+    ql.insertAdjacentHTML("beforeend",
+      '<option value="'+code+'">Supplementary — '+esc(COMMUNITY_LABELS[code]||code)+' ('+data.supplementary[code].length+')</option>');
+  }
+  const qc = document.getElementById("qComm");
+  qc.innerHTML = "";
+  for(const code of COMM_CODES){
+    qc.insertAdjacentHTML("beforeend", '<option value="'+code+'">'+esc(COMMUNITY_LABELS[code])+'</option>');
+  }
+  onListChange();
+}
+
+function onListChange(){
+  const list = document.getElementById("qList").value;
+  const qc = document.getElementById("qComm");
+  const warn = document.getElementById("commWarn");
+  warn.classList.add("hidden");
+  if(list==="MAIN"){
+    qc.disabled = false;
+    // auto-fill from rank
+    syncMainCommunity();
+  } else {
+    qc.value = list;
+    qc.disabled = true;
+  }
+}
+document.getElementById("qRank").addEventListener("input", ()=>{
+  if(document.getElementById("qList").value==="MAIN") syncMainCommunity();
+});
+function syncMainCommunity(){
+  const rank = parseInt(document.getElementById("qRank").value,10);
+  const row = data.mainList.find(r=>r.rank===rank);
+  if(row){ document.getElementById("qComm").value = row.community; }
+}
+
+/* ---------- compute & render result ---------- */
+function compute(){
+  const list = document.getElementById("qList").value;
+  const rank = parseInt(document.getElementById("qRank").value,10);
+  const chosenComm = document.getElementById("qComm").value;
+  const rb = document.getElementById("resultBody");
+  document.getElementById("card-result").classList.remove("hidden");
+  const dc = document.getElementById("discChart");
+  if(dc) dc.textContent = ROTATION_CHARTS[activeChartKey].label;
+
+  if(isNaN(rank) || rank<1){ rb.innerHTML = '<p class="badmsg">Enter a valid rank (1 or higher).</p>'; show(rb); return; }
+
+  let targetId, who, actualComm;
+  if(list==="MAIN"){
+    const row = data.mainList.find(r=>r.rank===rank);
+    if(!row){ rb.innerHTML='<p class="badmsg">No Main List candidate with rank '+rank+'. The list has ranks 1–'+maxMainRank()+'.</p>'; show(rb); return; }
+    targetId = "M-"+rank; who = row.name; actualComm = row.community;
+  } else {
+    const arr = data.supplementary[list]||[];
+    if(rank>arr.length){ rb.innerHTML='<p class="badmsg">The '+esc(list)+' supplementary list has only '+arr.length+' entr'+(arr.length===1?'y':'ies')+'.</p>'; show(rb); return; }
+    targetId = "S-"+list+"-"+(rank-1); who = arr[rank-1]; actualComm = list;
+  }
+
+  // gentle community mismatch warning (Main list)
+  const warn = document.getElementById("commWarn");
+  if(list==="MAIN" && chosenComm!==actualComm){
+    warn.classList.remove("hidden");
+    warn.textContent = "Note: you selected "+(COMMUNITY_LABELS[chosenComm]||chosenComm)+
+      ", but the imported list records this rank as "+(COMMUNITY_LABELS[actualComm]||actualComm)+". Using the imported value.";
+  } else { warn.classList.add("hidden"); }
+
+  const res = simulate(data, targetId);
+
+  if(!res.found){
+    rb.innerHTML =
+      '<p class="badmsg">Not reachable from this list / data.</p>'+
+      '<p class="muted">Within the simulated rotation, '+esc(who||"this candidate")+
+      ' is never advised — typically because higher-ranked candidates of the same community fill every reserved turn, '+
+      'or the supplementary data needed to reach them was not imported. Import the supplementary lists for better accuracy.</p>';
+    show(rb); return;
+  }
+
+  const slot = res.slot;
+  const turnDesc = slot==="OC"
+    ? "on an open / merit turn"
+    : "against a reserved turn for "+(SHORT[slot]||slot);
+
+  rb.innerHTML =
+    '<div class="result-num">'+res.turn+' <span class="est-tag">estimate</span></div>'+
+    '<div class="result-line"><b>'+esc(who||"")+'</b> ('+(COMMUNITY_LABELS[actualComm]||actualComm)+
+      (list==="MAIN"?", Main List rank "+rank:", "+esc(list)+" supplementary #"+rank)+')</div>'+
+    '<div class="result-line">Advised at <b>turn '+res.turn+'</b>, '+turnDesc+'.</div>'+
+    '<div class="result-line muted" style="margin-top:6px">≈ <b>'+res.turn+'</b> vacancies reported (in rotation) before this candidate is advised — an <b>estimate</b>.</div>'+
+    '<div class="result-line muted" style="font-size:12px;margin-top:4px">The real figure can differ: EWS (10%) &amp; Differently-Abled (4%) reservations are separate overlays not included, and relinquishments / NCA re-rotation are not modelled.</div>'+
+    dataConfidenceLine()+
+    howComputed(res, targetId);
+  show(rb);
+  document.getElementById("card-result").scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+// confidence note about the IMPORTED DATA, based on the list's own footer totals
+function dataConfidenceLine(){
+  const oc = (data && data.officialCounts) || {};
+  if(oc.main==null && oc.total==null){
+    return '<div class="conf-note none">This PDF prints no totals to auto-verify the import — please double-check the preview.</div>';
+  }
+  const pMain = data.mainList.length;
+  const pSupp = Object.values(data.supplementary||{}).reduce((s,a)=>s+a.length,0);
+  const pDA   = (data.da||[]).length;
+  const checks = [[pMain,oc.main],[pSupp,oc.supp],[pDA,oc.da],[pMain+pSupp+pDA,oc.total]].filter(c=>c[1]!=null);
+  const ok = checks.every(c=>c[0]===c[1]);
+  return ok
+    ? '<div class="conf-note ok">✓ Imported data matches the list\'s own totals — the input to this estimate is complete.</div>'
+    : '<div class="conf-note bad">⚠ Imported counts don\'t match the PDF\'s totals — the data is likely incomplete, so this number may be off. Fix the lists in Step 2.</div>';
+}
+
+// turn an advised id ("M-<rank>" / "S-<CODE>-<index>") into a readable rank label
+function rankLabel(id){
+  if(!id) return "";
+  if(id.indexOf("M-")===0) return "rank "+id.slice(2);
+  const m = id.match(/^S-(.+)-(\d+)$/);
+  if(m) return m[1]+" supp #"+(parseInt(m[2],10)+1);
+  return "";
+}
+function howComputed(res, targetId){
+  let rows = res.log.map(e=>{
+    const slotTxt = e.slot==="OC" ? "OC (merit)" : e.slot+" (reserved)";
+    let txt;
+    if(e.advisedId){
+      const rl = rankLabel(e.advisedId);
+      // reserved-community candidate picked up on an OC (merit) turn -> note it
+      const merit = (e.src.type==="OC" && e.src.community && e.src.community!=="GEN") ? " [merit — "+e.src.community+"]" : "";
+      txt = "advised "+esc(e.name||e.advisedId)+(rl?" ("+rl+")":"")+merit;
+    } else {
+      txt = "— NCA (no eligible candidate)";
+    }
+    const me = (e.advisedId===targetId) ? " me" : (!e.advisedId?" nca":"");
+    return '<span class="'+(me)+'">Turn '+String(e.turn).padStart(3," ")+" · "+slotTxt.padEnd(14," ")+" → "+txt+'</span>';
+  }).join("");
+  return '<details><summary>How this was computed ('+res.log.length+' rotation turns)</summary>'+
+    '<div class="log">'+rows+'</div>'+
+    '<p class="muted" style="font-size:11px;margin:8px 0 12px">Each turn reports one vacancy. OC turns go to the highest-ranked remaining candidate on merit (any community); a reserved turn goes to the best remaining candidate of that community, then to its supplementary list, else NCA.</p>'+
+    '</details>';
+}
+
+/* ---------- helpers ---------- */
+function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function show(el){ el.parentElement.classList.remove("hidden"); }
+function maxMainRank(){ return data.mainList.reduce((m,r)=>Math.max(m,r.rank),0); }
+
+/* ---------- official chart reference (generated from ROTATION_CHART) ---------- */
+function renderChartReference(){
+  const grid = document.getElementById("chartGrid");
+  const pct = document.getElementById("pctTable");
+  if(!grid || !pct) return;
+  const lbl = document.getElementById("chartRefLabel");
+  if(lbl) lbl.textContent = ROTATION_CHARTS[activeChartKey].label;
+  // tally counts straight from the chart so the displayed % always matches the data used
+  const counts = {};
+  ROTATION_CHART.forEach(c => counts[c] = (counts[c]||0)+1);
+  const order = ["OC","E","M","SC","ST","LC","OBC","V","SIUC","SCCC","D","HN"];
+  const nameOf = c => c==="OC" ? "Open Competition" : (COMMUNITY_LABELS[c]||c);
+  pct.innerHTML = '<div class="pcttbl">' + order.filter(c=>counts[c]).map(c =>
+    '<span><b>'+c+'</b> '+esc(nameOf(c))+' — '+counts[c]+'%</span>').join("") + '</div>';
+  grid.innerHTML = '<div class="cgrid">' + ROTATION_CHART.map((c,i) =>
+    '<div class="cell '+(c==="OC"?"oc":"res")+'" title="Turn '+(i+1)+': '+esc(nameOf(c))+'">'+
+    '<b>'+(i+1)+'</b>'+c+'</div>').join("") + '</div>';
+}
+renderChartReference();
+
+// chart selector (post type) -> switch active chart, refresh reference, invalidate stale result
+function onChartChange(){
+  setChart(document.getElementById("chartSel").value);
+  renderChartReference();
+  if(data){ buildQuery(); }                 // supplementary options unaffected, but keep state fresh
+  const rc = document.getElementById("card-result");
+  if(rc && !rc.classList.contains("hidden")){
+    document.getElementById("resultBody").innerHTML =
+      '<p class="muted">Rotation chart changed to <b>'+esc(ROTATION_CHARTS[activeChartKey].label)+
+      '</b>. Press <b>Calculate vacancy count</b> again to recompute.</p>';
+  }
+}
+
+/* expose internals for testing in non-browser environments */
+if(typeof module!=="undefined" && module.exports){
+  module.exports = { ROTATION_CHART, mapCommunityText, mapSupHeading, parseLines, simulate };
+}
+</script>
+</body>
+</html>
